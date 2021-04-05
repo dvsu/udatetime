@@ -1,3 +1,14 @@
+### Description  
+  
+Most controllers that support MicroPython do not have built-in RTC. 
+For time-sensitive application, e.g. remote and complex logic control,
+real datetime could improve the precision of event logging and monitoring. 
+This simple datetime module utilizes `urequests` module to make an API call to 
+**Open Notify** <http://open-notify.org/>. Current Unix timestamp is based on latest 
+valid location of the International Space Station (ISS).
+  
+<br>
+
 ### Usage  
   
 - Put `udatetime.py` file in `lib` folder.  
