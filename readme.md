@@ -18,11 +18,13 @@ valid location of the International Space Station (ISS).
 
 ### Example  
   
-    from udatetime import UDatetime
+```python
+from udatetime import UDatetime
 
 
-    t = UDatetime()
-    print(t.utc_time()) # print Unix epoch time in seconds
+t = UDatetime()
+print(t.utc_time()) # print Unix epoch time in seconds
+```
   
 <br>
   
