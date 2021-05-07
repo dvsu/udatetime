@@ -1,11 +1,6 @@
 ### Description  
   
-Most controllers that support MicroPython do not have built-in RTC. 
-For time-sensitive application, e.g. remote and complex logic control,
-real datetime could improve the precision of event logging and monitoring. 
-This simple datetime module utilizes `urequests` module to make an API call to 
-**Open Notify** <http://open-notify.org/>. Current Unix timestamp is based on latest 
-valid location of the International Space Station (ISS).
+Simple `datetime` module written in MicroPython for Pycom board
   
 <br>
 
@@ -19,18 +14,27 @@ valid location of the International Space Station (ISS).
 ### Example  
   
 ```python
-from udatetime import UDatetime
+from udatetime import udatetime
 
+# establish wireless connection
+# ...
+# ...
 
-t = UDatetime()
-print(t.utc_time()) # print Unix epoch time in seconds
+datetime = udatetime()
+print(datetime.utc_seconds()) # print Unix epoch time in seconds
+
+# get utc time
+print(datetime.utcnow())
+
+# utc time as string
+print(datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
 ```
   
 <br>
   
 ### Dependencies  
   
-- urequests <https://github.com/micropython/micropython-lib/tree/master/urequests>
+- Pycom RTC module <https://docs.pycom.io/firmwareapi/pycom/machine/rtc/>
   
 <br>
   
@@ -50,3 +54,5 @@ print(t.utc_time()) # print Unix epoch time in seconds
 05/04/2021 
 - Add basic function to get Unix epoch time in seconds
 
+07/05/2021 
+- Change datetime logic based on Pycom RTC module and NTP sync 
