@@ -1,6 +1,6 @@
-import ujson
 import utime
-import urequests as requests
+from time import sleep
+from machine import RTC
 
 
 class Datetime:
@@ -17,52 +17,46 @@ class Datetime:
 class udatetime:
 
     def __init__(self):
-        
-        # The latest UTC time can be extracted from returned JSON data of ISS API call.
-        # At the same time, the internal counter of the device will be started once the device is ON,
-        # and can be extracted from utime.time(). The number obtained from this method will be stored
-        # as current offset.
-
-        # Every API call will introduce some time delay and its impact can be minimized by estimating
-        # latest UTC time obtained from last API call, then added by latest counter and substracted by
-        # recorded offset.
-        #       estimated UTC time = UTC time from API call + utime.time() - offset
-
-        self.sync_time()
-        self.__seconds = 0
         self.__datetime = Datetime()
-        self.__sync_period = 3600 # sync time every 1 hour
-        self.__sync_tracker = 0
-
-    # Time tracking for time sync to ensure the timestamp is accurate
-    def time_tracker(self) -> None:
-        
-        if self.__sync_tracker < self.__sync_period:
-            self.__sync_tracker = utime.time() - self.__offset
-        else:
-            self.sync_time()
-            self.__sync_tracker = 0
-
-    def utc_seconds(self) -> int:
-        try:
-            self.time_tracker()
-
-            self.__seconds = self.__base_utc + utime.time() - self.__offset
-            return self.__seconds
-
-        except Exception as e:
-            print("Failed to get UTC seconds")
-            print(e)
+        self.__timetuple = ()
+        self.__seconds = 0
+        self.__rtc = RTC()
+        self.__rtc.ntp_sync("pool.ntp.org") # sync to UTC time
+        while not self.__rtc.synced():
+            sleep(1)
+    
+    # get_current_time() will be the core method to be called to get latest datetime 
+    # and update the values of corresponding attributes
+    def get_current_time(self):
+        self.__timetuple = self.__rtc.now()
+        self.__datetime.year, self.__datetime.month, self.__datetime.day, self.__datetime.hour, self.__datetime.minute, self.__datetime.second, *args = self.__timetuple
 
     def utcnow(self) -> udatetime:
-
-        self.fromtimestamp(self.utc_seconds())
+        self.get_current_time()
         return self
 
-    def fromtimestamp(self, seconds:int) -> udatetime:
+    def utc_seconds(self) -> int:
+        self.get_current_time()
+        self.__seconds = utime.mktime(self.__timetuple)
+        return self.__seconds
 
-        self.__datetime.year, self.__datetime.month, self.__datetime.day, self.__datetime.hour, self.__datetime.minute, self.__datetime.second, *args = utime.gmtime(seconds)
-        return self
+    def year(self) -> int:
+        return self.__datetime.year
+
+    def month(self) -> int:
+        return self.__datetime.month
+
+    def day(self) -> int:
+        return self.__datetime.day
+
+    def hour(self) -> int:
+        return self.__datetime.hour
+
+    def minute(self) -> int:
+        return self.__datetime.minute
+
+    def second(self) -> int:
+        return self.__datetime.second
 
     def strftime(self, dt_format:str) -> str:
 
@@ -81,15 +75,6 @@ class udatetime:
 
         return dt_format
 
-    def sync_time(self) -> None:
-        try:
-            response = requests.get("http://api.open-notify.org/iss-now.json")
-            self.__base_utc = ujson.loads(response.content.decode('utf-8'))["timestamp"]
-            self.__offset = utime.time()
-
-        except Exception as e:
-            print("Not connected to network. Failed to sync time.\n{}".format(e))
-
     def __str__(self) -> str:
         return "{:4}-{:02}-{:02}T{:02}:{:02}:{:02}Z".format(self.__datetime.year, self.__datetime.month, self.__datetime.day, self.__datetime.hour, self.__datetime.minute, self.__datetime.second)
-        
+     
